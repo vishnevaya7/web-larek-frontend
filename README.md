@@ -37,6 +37,4 @@ npm run build
 
 или
 
-```
-yarn build
-```
+ 

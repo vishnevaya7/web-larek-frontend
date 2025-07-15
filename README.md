@@ -49,7 +49,7 @@ yarn build
 export interface IProduct {
 id: string
 title: string
-price: number
+price: number | null
 description: string
 image: string
 category: string
@@ -98,6 +98,7 @@ export type IProductShort = Pick<IProduct, 'id' | 'title' | 'price'> - Данн�
 export type IOrderModal = Pick<IOrder, 'total'> & { items: IProductShort[] }
 export type IPaymentModal = Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'> - Данные формы для информации о платеже
 export type IFormErrors = Partial<Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>> - Данные формы для информации о платеже
+
 ```
 ### Типы для перечисления
 
@@ -139,7 +140,8 @@ export interface IOrdersData {
 	orderModalStage: ModalStage
 	addItemToOrder(product: IProduct): void
 	removeItemFromOrder(id: string): void
-	toPayOrder(): void
+	toPayOrder(payment: string, address: string): void
+	getTotal(): number
 	checkValidation(data: IPaymentModal): IFormErrors | null
 }
 ```
@@ -153,8 +155,7 @@ export interface IProductView {
 template: HTMLElement
 events: IEvents
 id: string
-setData(productData: IProduct): void
-render(): HTMLElement
+render(productData: IProduct): HTMLElement;
 }
 ```
 
@@ -173,8 +174,7 @@ export interface IProductsContainerView {
 export interface IOrderView {
     template: HTMLElement
     events: IEvents
-    setData(order: IOrder): void
-    render(stage: ModalStage): HTMLElement
+    render(order: IOrderModal, stage: ModalStage): HTMLElement;
     updateStage(stage: ModalStage): void
 ```
 
@@ -206,22 +206,58 @@ export interface IPageCartCounterView {
 export interface IContactView {
     template: HTMLElement
     events: IEvents
-    setData(data: IPaymentModal): void
-    render(): HTMLElement
-    setErrors(errors: IFormErrors): void
+    render(data: IPaymentModal, errors?: IFormErrors): HTMLElement;
 }
 ```
 
 Интерфейс для уведомления об успешном заказе
 
 ```
-export interface IContactView {
+export interface ISuccessView  {
     template: HTMLElement
     events: IEvents
-    setTotal(total: number): void
-    render(): HTMLElement
+    render(total: number): HTMLElement;
 }
 ```
+
+Интерфейс для формы оплаты (адрес и способ оплаты):
+
+```
+export interface IPaymentView {
+    template: HTMLElement
+    events: IEvents
+    render(data: Pick<IOrder, 'payment' | 'address'>, errors?: IFormErrors): HTMLElement
+}
+```
+
+Интерфейс для базового компонента формы:
+
+```
+export interface IFormView {
+    template: HTMLElement
+    events: IEvents
+    valid: boolean
+    errors: IFormErrors
+    render(data: Partial<IOrder>): HTMLElement
+    onInputChange(field: keyof IOrder, value: string): void
+    setErrors(errors: IFormErrors): void
+    clearErrors(): void
+}
+```
+
+Интерфейс для шагов заказа (общий):
+
+```
+export interface IOrderStepView {
+    template: HTMLElement;
+    events: IEvents
+    stage: ModalStage;
+    render(data: Partial<IOrder>, errors?: IFormErrors): HTMLElement;
+    validate(data: Partial<IOrder>): IFormErrors | null;
+    getFormData(): Partial<IOrder>;
+}
+```
+
 
 ### Интерфейсы базовых классов
 
@@ -245,7 +281,7 @@ export interface IApiClient {
     baseUrl: string
     headers?: Record<string, string>
     get<T>(endpoint: string): Promise<T>
-    post<T, D37>(endpoint: string, data: D, method?: string): Promise<T>
+    post<T, D>(endpoint: string, data: D, method?: string): Promise<T>
 }
 ```
 
@@ -298,12 +334,14 @@ export interface IApiClient {
 Конструктор класса принимает инстант брокера событий\
 В полях класса хранятся следующие данные:
 - `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
-- `order: IOrder` — данные заказа.
+- `order: Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>` — частичные данные заказа
+- `items: IProduct[]` — товары в корзине
 - `orderModalStage: ModalStage` — текущая стадия модального окна.
 
 Так же класс предоставляет набор методов для взаимодействия с этими данными.
-- `addProduct(product: IProduct): void` - добавить продукт в корзину
-- `removeProduct(id: string): void` - удалить продукт из корзины
+- `getTotal(): number` - возвращает общую стоимость корзины
+- `addItemToOrder(product: IProduct): void` - добавить продукт в корзину
+- `removeItemFromOrder(id: string): void` - удалить продукт из корзины
 - `toPayOrder(): void` - перейти к оплате заказа
 - `checkValidation(data: IPaymentModal):IFormErrors` - проверяет объект с данными пользователя на валидность
 
@@ -333,8 +371,7 @@ export interface IApiClient {
 - `description: HTMLElement` - элемент описания.
 - `button: HTMLButtonElement` - кнопка действия.
   Методы:
-- `setData(productData: IProduct): void` - заполняет карточку данными.
-- `render(): HTMLElement` - возвращает DOM-элемент карточки..
+- `render(productData: IProduct): HTMLElement;` - заполняет карточку данными.
 - сеттеры: `id, title, price, description, image, category`.
 - геттеры `id`.
 
@@ -354,11 +391,82 @@ export interface IApiClient {
 - template: HTMLElement — шаблон корзины.
 - events: IEvents — брокер событий.
 Методы:
-- setData(order: IOrder): void — заполняет корзину данными.
-- render(stage: ModalStage): HTMLElement — рендерит корзину для текущей стадии.
+- render(order: IOrderModal, stage: ModalStage): HTMLElement; — заполняет корзину данными.
 - updateStage(stage: ModalStage): void — обновляет UI корзины.
 - Сеттер: cartItems, total.
 - Геттер: cartItems.
+
+#### Класс Form
+Абстрактный базовый класс для всех форм. Реализует IFormView.
+Поля:
+- `template: HTMLElement` - шаблон формы
+- `events: IEvents` - брокер событий
+- `valid: boolean` - состояние валидности формы
+- `errors: IFormErrors` - объект с ошибками валидации
+- `submitButton: HTMLButtonElement` - кнопка отправки формы
+- `errorContainer: HTMLElement` - контейнер для отображения ошибок
+Методы:
+- render(data: Partial): HTMLElement - рендерит форму с переданными данными
+- onInputChange(field: keyof IOrder, value: string): void - обработчик изменения полей ввода
+- setErrors(errors: IFormErrors): void - устанавливает ошибки валидации
+- clearErrors(): void - очищает все ошибки
+- toggleSubmitButton(state: boolean): void - управляет состоянием кнопки отправки
+- getFormData(): Partial<IOrder> - возвращает данные формы
+
+
+#### Класс Payment
+Отображает форму оплаты (адрес и способ оплаты). Реализует IPaymentView.
+Наследуется от Form.
+Поля:
+- template: HTMLElement - шаблон формы оплаты
+- events: IEvents - брокер событий
+- addressInput: HTMLInputElement - поле ввода адреса
+- cardButton: HTMLButtonElement - кнопка выбора оплаты картой
+- cashButton: HTMLButtonElement - кнопка выбора оплаты наличными
+- nextButton: HTMLButtonElement - кнопка перехода к следующему шагу
+- errorContainer: HTMLElement - контейнер для ошибок
+Методы:
+- render(data: Pick<IOrder, 'payment' | 'address'>, errors?: IFormErrors): HTMLElement - рендерит форму с данными оплаты
+-  setErrors(errors: IFormErrors): void - устанавливает ошибки валидации
+-  selectPaymentMethod(method: PaymentMethod): void - выбирает способ оплаты
+-  setAddress(address: string): void - устанавливает адрес
+-  Сеттеры: payment, address
+ - Геттеры: payment, address
+
+#### Класс Contact
+Отображает форму контактных данных. Реализует IContactView.
+Наследуется от Form.
+Поля:
+- template: HTMLElement - шаблон формы контактов
+- events: IEvents - брокер событий
+- emailInput: HTMLInputElement - поле ввода email
+- phoneInput: HTMLInputElement - поле ввода телефона
+- payButton: HTMLButtonElement - кнопка оплаты заказа
+- errorContainer: HTMLElement - контейнер для ошибок
+Методы:
+- render(data: IPaymentModal, errors?: IFormErrors): HTMLElement - рендерит форму с контактными данными
+- setErrors(errors: IFormErrors): void - устанавливает ошибки валидации
+- validateEmail(email: string): boolean - валидирует email
+- validatePhone(phone: string): boolean - валидирует телефон
+- Сеттеры: email, phone
+- Геттеры: email, phone, valid
+
+#### Класс OrderStep
+Отображает шаги заказа. Реализует IOrderStepView.
+Поля:
+- template: HTMLElement - шаблон шага заказа
+- events: IEvents - брокер событий
+- stage: ModalStage - текущая стадия заказа
+- formContainer: HTMLElement - контейнер для формы
+- navigationButtons: HTMLElement - контейнер с кнопками навигации
+- progressIndicator: HTMLElement - индикатор прогресса
+Методы:
+- render(data: Partial, errors?: IFormErrors): HTMLElement - рендерит шаг заказа
+- validate(data: Partial<IOrder>): IFormErrors | null - валидирует данные текущего шага
+- getFormData(): Partial<IOrder> - возвращает данные формы текущего шага
+- updateProgress(currentStep: ModalStage): void - обновляет индикатор прогресса
+- showErrors(errors: IFormErrors): void - отображает ошибки валидации
+- enableNavigation(canProceed: boolean): void - управляет доступностью кнопок навигации
 
 #### Класс PageCartCounter
 Реализует IPageCartCounterView. Отвечает за отображение количество товаров в корзине на главной странице.
@@ -390,20 +498,7 @@ export interface IApiClient {
 - `total: HTMLElement` - элемент общего количества заказанных продуктов.
 - `events: IEvents` — брокер событий.
 Методы:
-- setTotal(total: number): void: void -  устанавливает сумму.
-- render(): HTMLElement - рендерит уведомление.
-
-#### Класс Contact
-Отвечает за отображение контактных данных.
-
-Поля:
-- `phone` - элемент телефона.
-- `email` - элемент электронной почты.
-
-Методы:
-- сеттер `phone` - устанавливает номер телефона.
-- сеттер `email` - устанавливает электронную почту.
-- `valid` - проверяет валидность контактных данных.
+- render(total: number): HTMLElement -  устанавливает сумму.
 
 
 ### Слой коммуникации
@@ -416,7 +511,7 @@ export interface IApiClient {
 Методы:
 - `getProducts(): Promise<ApiListResponse<IProduct>>` - возвращает список продуктов
 - `getProductById(id: string): Promise<IProduct>` - возвращает продукт по его id
-- `createOrder(order: order: IOrder): Promise<IOrderPostResponse>` - создает заказ
+- `createOrder(order: IOrder): Promise<IOrderPostResponse>` - создает заказ
 
 
 ## Взаимодействие компонентов

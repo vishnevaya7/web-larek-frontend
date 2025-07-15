@@ -1,24 +1,44 @@
 import { Api, ApiListResponse } from '../base/api';
-import { IApiApi, IOrderPostResponse, IOrderPostRequest, IProduct } from '../../types';
+import { IOrder, IOrderPostResponse, IProduct } from '../../types';
 
+export interface IApiApi {
+	getProducts(): Promise<IProduct[]>;
 
-export class AppApi implements IApiApi {
-	private api: Api;
+	getProductById(id: string): Promise<IProduct>;
 
-	constructor(baseUrl: string, options?: RequestInit) {
-		this.api = new Api(baseUrl, options);
+	createOrder(order: IOrder): Promise<IOrderPostResponse>;
+}
+
+export class AppApi extends Api implements IApiApi {
+	readonly cdn: string;
+
+	constructor(baseUrl: string, cdn: string, options?: RequestInit) {
+		super(baseUrl, options);
+		this.cdn = cdn;
 	}
 
-	getProducts(): Promise<ApiListResponse<IProduct>> {
-		return this.api.get('/products') as Promise<ApiListResponse<IProduct>>;
+	getProducts(): Promise<IProduct[]> {
+		return this.get('/product')
+			.then((data: ApiListResponse<IProduct>) => {
+				if (!data || !data.items) {
+					throw new Error('Invalid response format');
+				}
+				return data.items.map(item => ({
+					...item,
+					image: `${this.cdn}${item.image}`
+				}));
+			})
+			.catch((error: Error) => {
+				console.error('Error fetching products:', error);
+				throw error;
+			});
 	}
-
 
 	getProductById(id: string): Promise<IProduct> {
-		return this.api.get(`/products/${id}`) as Promise<IProduct>;
+		return this.get(`/product/${id}`) as Promise<IProduct>;
 	}
 
-	createOrder(order: IOrderPostRequest): Promise<IOrderPostResponse> {
-		return this.api.post('/orders', order, 'POST') as Promise<IOrderPostResponse>;
+	createOrder(order: IOrder): Promise<IOrderPostResponse> {
+		return this.post('/order', order) as Promise<IOrderPostResponse>;
 	}
 }

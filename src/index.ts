@@ -29,7 +29,6 @@ export enum Event {
 	MODAL_CLOSE = 'modal:close',
 	PRODUCTS_GET = 'products:get',
 	PRODUCT_GET_BY_ID = 'product:get-by-id',
-	BASKET_OPEN = 'basket:open',
 }
 
 
@@ -73,7 +72,7 @@ const productPreview = new ProductPreview(cloneTemplate(cardPreviewTemplate), {
 	},
 });
 
-const card = new Cart(cloneTemplate(basketTemplate), eventEmitter);
+const cart = new Cart(cloneTemplate(basketTemplate), eventEmitter);
 
 
 eventEmitter.on(Event.DOM_LOADED, () => {
@@ -102,7 +101,7 @@ eventEmitter.on(Event.PRODUCT_SELECTED, (product: IProduct) => {
 	},
 );
 
-// eventEmitter.on(Event.ORDER_OPEN, (order: IBasket) => {
-// 	modal.content = card.render(order);
-// 	modal.open();
-// });
+eventEmitter.on(Event.ORDER_OPEN, (order: IBasket) => {
+	modal.content = cart.render(order);
+	modal.open();
+});

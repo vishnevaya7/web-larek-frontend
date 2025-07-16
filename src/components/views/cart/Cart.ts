@@ -36,19 +36,17 @@ export class Cart extends Component<IBasket> {
 		if (items.length) {
 			this._list.replaceChildren(...items.map(item => item.render()));
 			this.setDisabled(this._button, false);
-			this.setText(this._total,
-				formatNumber(
-					items.reduce((total, item) => total + Number(item.price), 0),
-				)
-			);
-
 		} else {
 			this._list.replaceChildren(createElement<HTMLParagraphElement>('p', {
 				textContent: 'Корзина пуста',
 			}));
-			this.setText(this._total, formatNumber(0));
 			this.setDisabled(this._button, true);
 		}
+		this.setText(this._total,
+			formatNumber(
+				items.reduce((total, item) => total + Number(item.price), 0),
+			) + ' синапсов',
+		);
 	}
 
 

@@ -1,6 +1,7 @@
 import { Model } from '../../components/base/Model';
 import { IProduct, IProductsData } from '../../types';
 import { EventEmitter } from '../../components/base/events';
+import { Event } from '../../index';
 
 
 export class ProductsData extends Model implements IProductsData {
@@ -13,12 +14,12 @@ export class ProductsData extends Model implements IProductsData {
 	}
 
 	setProducts(products: IProduct[]) {
-		this.emitChanges('products:set', products);
 		this.products = products;
+		this.emitChanges(Event.PRODUCTS_CHANGED, products);
 	}
 
 	getAll(): Promise<IProduct[]> {
-		this.emitChanges('products:get');
+		this.emitChanges(Event.PRODUCTS_GET);
 		return new Promise((resolve, reject) => {
 			if (this.products) {
 				resolve(this.products);
@@ -29,7 +30,7 @@ export class ProductsData extends Model implements IProductsData {
 	}
 
 	getById(id: string): Promise<IProduct> {
-		this.emitChanges('products:getById');
+		this.emitChanges(Event.PRODUCT_GET_BY_ID);
 		return new Promise((resolve, reject) => {
 			const product = this.products.find(el => el.id === id);
 			if (!product) {
@@ -43,7 +44,7 @@ export class ProductsData extends Model implements IProductsData {
 	setPreview(id: string): void {
 		this.getById(id).then(res => {
 			this.preview = res;
-			this.emitChanges('preview:set', res);
+			this.emitChanges(Event.PREVIEW_SET, res);
 		});
 	}
 }

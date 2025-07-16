@@ -62,6 +62,7 @@ export class EventEmitter implements IEvents {
         });
     }
 
+
     /**
      * Слушать все события
      */
@@ -87,5 +88,6 @@ export class EventEmitter implements IEvents {
             });
         };
     }
+
 }
 

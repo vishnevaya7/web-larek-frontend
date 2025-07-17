@@ -2,15 +2,14 @@ import { Component } from '../../base/Component';
 import { EventEmitter } from '../../base/events';
 import { createElement, ensureElement, formatNumber } from '../../../utils/utils';
 import { Event } from '../../../index';
-import { IOrderModal } from '../../../types';
-import { CartItem } from './CartItem';
+import { BasketItem } from './BasketItem';
 
 export interface IBasket {
 	items: HTMLElement[];
 	total: number;
 }
 
-export class Cart extends Component<IBasket> {
+export class Basket extends Component<IBasket> {
 	protected _list: HTMLElement;
 	protected _total: HTMLElement;
 	protected _button: HTMLElement;
@@ -32,7 +31,7 @@ export class Cart extends Component<IBasket> {
 
 	}
 
-	set items(items: CartItem[]) {
+	set items(items: BasketItem[]) {
 		if (items.length) {
 			this._list.replaceChildren(...items.map(item => item.render()));
 			this.setDisabled(this._button, false);
@@ -48,6 +47,5 @@ export class Cart extends Component<IBasket> {
 			) + ' синапсов',
 		);
 	}
-
 
 }

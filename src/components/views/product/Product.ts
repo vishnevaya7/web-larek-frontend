@@ -1,6 +1,6 @@
 import { Component } from '../../base/Component';
 import { IProductCard } from '../../../types';
-import { ensureElement } from '../../../utils/utils';
+import { ensureElement, getCategoryKind } from '../../../utils/utils';
 
 
 interface IProductActions {
@@ -47,12 +47,10 @@ export class Product extends Component<IProductCard>{
 		this.setImage(this._image, value, this.title)
 	}
 
+
 	set category(value: string) {
 		this.setText(this._category, value);
-	}
-
-	get category(): string {
-		return this._category.textContent || '';
+		this._category.classList.add(`${this.blockName}__category_${getCategoryKind(value)}`)
 	}
 
 	set price(value: string) {

@@ -1,6 +1,6 @@
 import { Component } from '../../base/Component';
 import { IProductModal } from '../../../types';
-import { ensureElement } from '../../../utils/utils';
+import { ensureElement, getCategoryKind } from '../../../utils/utils';
 
 
 interface ISuccessActions {
@@ -23,7 +23,6 @@ export class ProductPreview extends Component<IProductModal>{
 		this._price = ensureElement<HTMLElement>('.card__price', container);
 		this._image = ensureElement<HTMLImageElement>('.card__image', container);
 		this._category = ensureElement<HTMLElement>('.card__category', container);
-		// this._id = ensureElement<HTMLElement>('.card__id', container).textContent || '';
 		this._description = ensureElement<HTMLElement>('.card__text', container);
 		this._button = ensureElement<HTMLButtonElement>('.card__button', container);
 
@@ -51,18 +50,11 @@ export class ProductPreview extends Component<IProductModal>{
 
 	set category(value: string) {
 		this.setText(this._category, value);
-		this._category.className = `card__category card__category_${value}`;
+		this._category.classList.add(`card__category_${getCategoryKind(value)}`)
 	}
-
 	set description(value: string) {
 		this.setText(this._description, value);
 	}
 
-	// set id(value: string) {
-	// 	this._id = value;
-	// }
-	//
-	// get id(): string {
-	// 	return this._id;
-	// }
+
 }

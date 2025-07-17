@@ -16,6 +16,17 @@ export function formatNumber(x: number, sep = ' ') {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, sep);
 }
 
+export function getCategoryKind(category: string): string {
+    const categoryMap: Record<string, string> = {
+        'софт-скил': 'soft',
+        'другое': 'other',
+        'дополнительное': 'additional',
+        'кнопка': 'button',
+        'хард-скил': 'hard'
+    };
+    return categoryMap[category] || 'other';
+}
+
 export function ensureAllElements<T extends HTMLElement>(selectorElement: SelectorCollection<T>, context: HTMLElement = document as unknown as HTMLElement): T[] {
     if (isSelector(selectorElement)) {
         return Array.from(context.querySelectorAll(selectorElement)) as T[];

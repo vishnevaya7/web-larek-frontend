@@ -8,9 +8,10 @@ import * as events from 'node:events';
 import { Modal } from './components/common/Modal';
 import { cloneTemplate, ensureElement } from './utils/utils';
 import { ProductPreview } from './components/views/product/ProductPreview';
-import { IOrder, IOrderModal, IProduct } from './types';
+import {  IProduct } from './types';
 import { Product } from './components/views/product/Product';
-import { Cart, IBasket } from './components/views/cart/Cart';
+import { Basket,  IBasket } from './components/views/basket/Basket';
+import { BasketItem } from './components/views/basket/BasketItem';
 
 
 export enum Event {
@@ -29,8 +30,8 @@ export enum Event {
 	MODAL_CLOSE = 'modal:close',
 	PRODUCTS_GET = 'products:get',
 	PRODUCT_GET_BY_ID = 'product:get-by-id',
+	BASKET_REMOVE = 'basket:remove',
 }
-
 
 const eventEmitter = new EventEmitter();
 
@@ -53,27 +54,33 @@ document.addEventListener('DOMContentLoaded', function() {
 const api = new AppApi(API_URL, CDN_URL);
 const productModel = new ProductsData(eventEmitter);
 
-eventEmitter.on(Event.DOM_LOADED, () => {
-	api.getProducts().then(products => productModel.setProducts(products));
-});
+
+const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
+const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
 
 const page = new Page(document.body, eventEmitter);
 const modal = new Modal(ensureElement('#modal-container'), eventEmitter);
 
 
-const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
-const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
-const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const basketItems: BasketItem[] = [];
 
-const productPreview = new ProductPreview(cloneTemplate(cardPreviewTemplate), {
-	onClick: () => {
-		eventEmitter.emit(Event.PRODUCT_ADDED_TO_CART, productPreview);
-		modal.close();
-	},
+const basket = new Basket(cloneTemplate(basketTemplate), eventEmitter);
+
+
+eventEmitter.on(Event.PRODUCT_SELECTED, (product: IProduct) => {
+
+	const productPreview = new ProductPreview(cloneTemplate(cardPreviewTemplate), {
+		onClick: () => {
+			eventEmitter.emit(Event.PRODUCT_ADDED_TO_CART, product);
+			modal.close();
+		},
+	});
+
+	modal.content = productPreview.render(product);
+	modal.open();
 });
-
-const cart = new Cart(cloneTemplate(basketTemplate), eventEmitter);
-
 
 eventEmitter.on(Event.DOM_LOADED, () => {
 	api.getProducts()
@@ -93,15 +100,47 @@ eventEmitter.on(Event.PRODUCTS_CHANGED, (products: IProduct[]) => {
 	page.gallery = productElements;
 });
 
-eventEmitter.on(Event.PRODUCT_SELECTED, (product: IProduct) => {
 
-		modal.content = productPreview.render(product);
+eventEmitter.on(Event.PRODUCT_ADDED_TO_CART, (product: IProduct) => {
 
-		modal.open();
-	},
-);
+	const existingItem = basketItems.find(item => item.id === product.id);
+	if (existingItem) {
+		return;
+	}
+
+	const basketItem = new BasketItem(cloneTemplate(basketItemTemplate), eventEmitter, {
+		onClick: (id: string) => {
+
+			const index = basketItems.findIndex(item => item.id === id);
+			if (index !== -1) {
+				basketItems.splice(index, 1);
+				updateBasket();
+			}
+		}
+	});
+
+	basketItem.id = product.id;
+	basketItem.title = product.title;
+	basketItem.price = product.price;
+
+	basketItems.push(basketItem);
+
+	updateBasket();
+
+	page.counter = basketItems.length;
+});
+
+function updateBasket() {
+
+	basketItems.forEach((item, index) => {
+		item.setIndex(index + 1);
+	});
+
+	basket.items = basketItems;
+}
 
 eventEmitter.on(Event.ORDER_OPEN, (order: IBasket) => {
-	modal.content = cart.render(order);
+	modal.content = basket.render(order);
 	modal.open();
 });
+

@@ -44,10 +44,26 @@ export enum ModalStage {
 	Finish = 'finish'
 }
 
+
 export interface IOrdersData {
+	items: IProduct[];
 	addItemToOrder(product: IProduct): void;
 	removeItemFromOrder(id: string): void;
-	toPayOrder(payment: string, address: string): void;
+	isInOrder(id: string): boolean;
+	getItemsCount(): number;
 	getTotal(): number;
-	checkValidation(data: IPaymentModal): IFormErrors | null;
+
+	payment: string | null;
+	email: string | null;
+	phone: string | null;
+	address: string | null;
+
+	setPaymentData(payment: string, address: string): void;
+	setContactData(email: string, phone: string): void;
+
+	validatePayment(): IFormErrors | null;
+	validateContact(): IFormErrors | null;
+
+	createOrder(): IOrder;
+	resetOrder(): void;
 }

@@ -12,7 +12,6 @@ export class ProductPreview extends Component<IProductModal>{
 	protected _price: HTMLElement;
 	protected _image: HTMLImageElement;
 	protected _category: HTMLElement;
-	// protected _id: string;
 	protected _description: HTMLElement;
 	protected _button: HTMLButtonElement;
 
@@ -30,9 +29,6 @@ export class ProductPreview extends Component<IProductModal>{
 			this._button.addEventListener('click', actions.onClick);
 		}
 
-		if (actions.onClick) {
-			container.addEventListener('click', actions.onClick);
-		}
 	}
 
 	set title(value: string) {

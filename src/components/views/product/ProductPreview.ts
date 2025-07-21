@@ -1,11 +1,9 @@
 import { Component } from '../../base/Component';
 import { IProductModal } from '../../../types';
 import { ensureElement, getCategoryKind } from '../../../utils/utils';
+import { Event } from '../../../index';
+import { IEvents } from '../../base/events';
 
-
-interface ISuccessActions {
-	onClick: () => void;
-}
 
 export class ProductPreview extends Component<IProductModal>{
 	protected _title: HTMLElement;
@@ -16,18 +14,20 @@ export class ProductPreview extends Component<IProductModal>{
 	protected _button: HTMLButtonElement;
 
 
-	constructor(container: HTMLElement, actions: ISuccessActions) {
+	constructor(private blockName: string, container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this._title = ensureElement<HTMLElement>('.card__title', container);
-		this._price = ensureElement<HTMLElement>('.card__price', container);
-		this._image = ensureElement<HTMLImageElement>('.card__image', container);
-		this._category = ensureElement<HTMLElement>('.card__category', container);
-		this._description = ensureElement<HTMLElement>('.card__text', container);
-		this._button = ensureElement<HTMLButtonElement>('.card__button', container);
+		this._title = this.getFromContainer<HTMLElement>(`.${blockName}__title`);
+		this._price = this.getFromContainer<HTMLElement>(`.${blockName}__price`);
+		this._image = this.getFromContainer<HTMLImageElement>(`.${blockName}__image`);
+		this._category = this.getFromContainer<HTMLElement>(`.${blockName}__category`);
+		this._description = this.getFromContainer<HTMLElement>(`.${blockName}__text`);
+		this._button = this.getFromContainer<HTMLButtonElement>(`.${blockName}__button`);
 
-		if (actions.onClick) {
-			this._button.addEventListener('click', actions.onClick);
-		}
+
+		this._button.addEventListener('click', () => {
+			this.events.emit(Event.PRODUCT_PREVIEW_BUTTON_CLICK)
+		});
+
 
 	}
 
@@ -46,7 +46,7 @@ export class ProductPreview extends Component<IProductModal>{
 
 	set category(value: string) {
 		this.setText(this._category, value);
-		this._category.classList.add(`card__category_${getCategoryKind(value)}`)
+		this._category.classList.add(`${this.blockName}__category_${getCategoryKind(value)}`)
 	}
 	set description(value: string) {
 		this.setText(this._description, value);

@@ -1,6 +1,7 @@
 import { Model } from '../../components/base/Model';
 import { IOrdersData, IProduct, IOrder, IFormErrors } from '../../types';
 import { EventEmitter } from '../../components/base/events';
+import { Event } from '../../index';
 
 export class OrdersData extends Model implements IOrdersData {
 	protected _items: IProduct[] = [];
@@ -36,7 +37,7 @@ export class OrdersData extends Model implements IOrdersData {
 	addItemToOrder(product: IProduct): void {
 		if (!this.isInOrder(product.id)) {
 			this._items.push(product);
-			this.emitChanges('order:items-changed', { items: this._items });
+			this.emitChanges(Event.ORDER_CHANGE, { items: this._items });
 		}
 	}
 
@@ -44,7 +45,7 @@ export class OrdersData extends Model implements IOrdersData {
 		const index = this._items.findIndex(item => item.id === id);
 		if (index !== -1) {
 			this._items.splice(index, 1);
-			this.emitChanges('order:items-changed', { items: this._items });
+			this.emitChanges(Event.ORDER_CHANGE, { items: this._items });
 		}
 	}
 
@@ -66,7 +67,7 @@ export class OrdersData extends Model implements IOrdersData {
 	setPaymentData(payment: string, address: string): void {
 		this._payment = payment;
 		this._address = address;
-		this.emitChanges('order:payment-changed', {
+		this.emitChanges(Event.ORDER_PAYMENT_CHANGED, {
 			payment: this._payment,
 			address: this._address
 		});
@@ -75,7 +76,7 @@ export class OrdersData extends Model implements IOrdersData {
 	setContactData(email: string, phone: string): void {
 		this._email = email;
 		this._phone = phone;
-		this.emitChanges('order:contact-changed', {
+		this.emitChanges(Event.ORDER_CONTACT_CHANGED, {
 			email: this._email,
 			phone: this._phone
 		});
@@ -139,6 +140,6 @@ export class OrdersData extends Model implements IOrdersData {
 		this._email = null;
 		this._phone = null;
 		this._address = null;
-		this.emitChanges('order:reset');
+		this.emitChanges(Event.ORDER_RESET);
 	}
 }

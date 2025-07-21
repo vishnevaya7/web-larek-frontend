@@ -1,11 +1,11 @@
 import { Component } from '../../base/Component';
 import { IProductCard } from '../../../types';
 import { ensureElement, getCategoryKind } from '../../../utils/utils';
+import { IEvents } from '../../base/events';
+import { Event } from '../../../index';
 
 
-interface IProductActions {
-	onClick: (event: MouseEvent) => void;
-}
+
 
 export class Product extends Component<IProductCard>{
 	protected _title: HTMLElement;
@@ -13,18 +13,19 @@ export class Product extends Component<IProductCard>{
 	protected _image?: HTMLImageElement;
 	protected _category: HTMLElement;
 
-	constructor(protected blockName: string, container: HTMLElement, actions?: IProductActions) {
+	constructor(protected blockName: string, container: HTMLElement, protected events: IEvents) {
 		super(container);
 
-		this._title = ensureElement<HTMLElement>(`.${blockName}__title`, container);
-		this._price = ensureElement<HTMLElement>(`.${blockName}__price`, container);
-		this._category = ensureElement<HTMLElement>(`.${blockName}__category`, container);
-		this._image = ensureElement<HTMLImageElement>(`.${blockName}__image`, container);
+		this._title = this.getFromContainer<HTMLElement>(`.${blockName}__title`);
+		this._price = this.getFromContainer<HTMLElement>(`.${blockName}__price`);
+		this._category = this.getFromContainer<HTMLElement>(`.${blockName}__category`);
+		this._image = this.getFromContainer<HTMLImageElement>(`.${blockName}__image`);
 
-		if (actions?.onClick) {
-			container.addEventListener('click', actions.onClick);
 
-		}
+		this.container.addEventListener('click', () => {
+			this.events.emit(Event.PRODUCT_TO_CLICK, { id: this.id })
+		});
+
 	}
 
 	set id(value: string) {

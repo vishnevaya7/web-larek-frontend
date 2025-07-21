@@ -1,5 +1,9 @@
+import { ensureElement } from '../../utils/utils';
+
 export abstract class Component<T> {
-	protected constructor(protected readonly container: HTMLElement) {
+	public container: HTMLElement;
+	protected constructor(container: HTMLElement) {
+		this.container = container;
 	}
 
 	toggleClass(element: HTMLElement, className: string, force?: boolean) {
@@ -34,6 +38,10 @@ export abstract class Component<T> {
 				element.alt = alt;
 			}
 		}
+	}
+
+	protected getFromContainer<V extends HTMLElement>(selector: string) {
+		return ensureElement<V>(selector,this.container);
 	}
 
 	render(data?: Partial<T>): HTMLElement {

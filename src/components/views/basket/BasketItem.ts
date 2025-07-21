@@ -16,10 +16,10 @@ export class BasketItem extends Component<IProductShort> {
 	constructor(container: HTMLElement, protected events: EventEmitter) {
 		super(container);
 
-		this._index = ensureElement<HTMLElement>('.basket__item-index', container);
-		this._title = ensureElement<HTMLElement>('.card__title', container);
-		this._price = ensureElement<HTMLElement>('.card__price', container);
-		this._button = ensureElement<HTMLButtonElement>('.basket__item-delete', container);
+		this._index = this.getFromContainer<HTMLElement>('.basket__item-index');
+		this._title = this.getFromContainer<HTMLElement>('.card__title');
+		this._price = this.getFromContainer<HTMLElement>('.card__price');
+		this._button = this.getFromContainer<HTMLButtonElement>('.basket__item-delete');
 
 
 		this._button.addEventListener('click', () => {

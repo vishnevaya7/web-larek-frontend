@@ -12,6 +12,8 @@
     flex-grow: 1;
   }
 
+
+
   &__item {
     border-bottom: 1px solid $primary;
     padding: 1.5rem 0;
@@ -35,5 +37,10 @@
       opacity: 0.5;
       margin-left: 4rem;
     }
+  }
+
+  &__empty {
+    color: #9CA3AF;
+    font-size: 1.1rem;
   }
 }

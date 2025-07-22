@@ -23,8 +23,8 @@ export interface IOrderPostResponse {
 }
 
 export type IProductCard = Omit<IProduct, 'description' | 'id'>;
-export type IProductModal = IProduct;
-export type IProductShort = Pick<IProduct, 'id' | 'title' | 'price'> ;
+export type IProductModal = IProduct & {isOrdered: boolean};
+export type IProductShort = Pick<IProduct, 'id' | 'title' | 'price'> & { index?: number };
 export type IOrderModal = Pick<IOrder, 'total'> & { items: IProductShort[] }
 export type IPaymentModal = Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>;
 export type IFormErrors = Partial<Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>>;

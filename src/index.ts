@@ -10,6 +10,8 @@ import { Product } from './components/views/product/Product';
 import { OrdersData } from './data/orders/OrdersData';
 import { Modal } from './components/common/Modal';
 import { ProductPreview } from './components/views/product/ProductPreview';
+import { Basket } from './components/views/basket/Basket';
+import { BasketItem } from './components/views/basket/BasketItem';
 
 
 export enum Event {
@@ -20,11 +22,10 @@ export enum Event {
 	PRODUCT_GET_BY_ID = 'product:get-by-id',
 	PRODUCTS_GET = 'products:get',
 	PREVIEW_SET = 'preview:set',
-	PRODUCT_SELECTED = 'product:select',
-	PRODUCT_PREVIEW_BUTTON_CLICK = 'product:preview-button-click',
+	ORDER_ADD_PRODUCT = 'order:add-product',
+	BASKET_TO_CLICK = 'basket:to-click',
 
-	ORDER_OPEN = 'basket:order',
-	ORDER_CHANGE = 'order:items-changed',
+	ORDER_OPEN = 'order:open',
 	ORDER_RESET = 'order:reset',
 	ORDER_PAYMENT_CHANGED = 'order:payment-changed',
 	ORDER_CONTACT_CHANGED = 'order:contact-changed',
@@ -32,23 +33,15 @@ export enum Event {
 
 
 	MODAL_OPEN = 'modal:open',
-
+	MODAL_CLOSE = 'modal:close',
+	ORDER_REMOVE_PRODUCT = 'order:remove-product',
 
 
 }
 
 const eventEmitter = new EventEmitter();
 
-if (process.env.NODE_ENV === 'development') {
-	eventEmitter.onAll(({ eventName, data }) => {
 
-		if (data) {
-			console.log(eventName, data);
-		} else {
-			console.log(eventName);
-		}
-	});
-}
 
 document.addEventListener('DOMContentLoaded', function() {
 	eventEmitter.emit(Event.DOM_LOADED);
@@ -64,12 +57,12 @@ const orderModel = new OrdersData(eventEmitter);
 
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
-// const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
-// const basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
 
 const page = new Page(document.body, eventEmitter);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), eventEmitter);
-
+const basket = new Basket('basket', cloneTemplate(basketTemplate), eventEmitter);
 
 eventEmitter.on(Event.DOM_LOADED, () => {
 	api.getProducts()
@@ -92,25 +85,83 @@ eventEmitter.on(Event.PRODUCT_TO_CLICK, (el: { id: string }) => {
 	productModel.setPreview(el.id);
 });
 
-eventEmitter.on(Event.PREVIEW_SET, (product:IProduct) => {
+eventEmitter.on(Event.PREVIEW_SET, (product: IProduct) => {
 	const preview = new ProductPreview('card', cloneTemplate(cardPreviewTemplate), eventEmitter);
-	preview.render(product);
-	modal.content = preview.render();
+	modal.content = preview.render({...product, isOrdered: orderModel.isInOrder(product.id)});
 	modal.open();
 });
 
-// eventEmitter.on(Event.MODAL_CLOSE, () => {
-// 	modal.close();
-// })
-(window as any).debug = {
-	api,
+eventEmitter.on(Event.ORDER_OPEN, () => {
+	const items = orderModel.items.map((item, index) => {
+		const basketItem = new BasketItem(cloneTemplate(basketItemTemplate), eventEmitter);
+		return basketItem.render({ ...item, index: index + 1 });
+	});
+
+	modal.content = basket.render({
+			items,
+			total: orderModel.getTotal()
+		},
+	);
+	modal.open();
+});
+
+eventEmitter.on(Event.BASKET_REMOVE, (el: { id: string }) => {
+	orderModel.removeItemFromOrder(el.id);
+	const items = orderModel.items.map((item, index) => {
+		const basketItem = new BasketItem(cloneTemplate(basketItemTemplate), eventEmitter);
+		return basketItem.render({ ...item, index: index + 1 });
+	});
+
+	modal.content = basket.render({
+			items,
+			total: orderModel.getTotal()
+		},
+	);
+});
+
+eventEmitter.on(Event.ORDER_ADD_PRODUCT, (el: { id: string }) => {
+	productModel.getById(el.id).then(product => {
+			orderModel.addItemToOrder(product);
+		},
+	);
+});
+
+eventEmitter.on(Event.ORDER_REMOVE_PRODUCT, (el: { id: string }) => {
+	productModel.getById(el.id).then(product => {
+			orderModel.removeItemFromOrder(product.id);
+		},
+	);
+});
+
+eventEmitter.on(Event.MODAL_OPEN, () => {
+	page.locked = true;
+});
+
+eventEmitter.on(Event.MODAL_CLOSE, () => {
+	page.locked = false;
+});
 
 
-	page,
-	modal,
 
-	eventEmitter
-};
+
+if (process.env.NODE_ENV === 'development') {
+	eventEmitter.onAll(({ eventName, data }) => {
+
+		if (data) {
+			console.log(eventName, data);
+		} else {
+			console.log(eventName);
+		}
+	});
+	(window as any).debug = {
+		api,
+		productModel,
+		orderModel,
+		page,
+		modal,
+		eventEmitter,
+	};
+}
 
 
 

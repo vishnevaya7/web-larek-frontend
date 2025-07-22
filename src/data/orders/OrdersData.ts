@@ -37,7 +37,6 @@ export class OrdersData extends Model implements IOrdersData {
 	addItemToOrder(product: IProduct): void {
 		if (!this.isInOrder(product.id)) {
 			this._items.push(product);
-			this.emitChanges(Event.ORDER_CHANGE, { items: this._items });
 		}
 	}
 
@@ -45,7 +44,6 @@ export class OrdersData extends Model implements IOrdersData {
 		const index = this._items.findIndex(item => item.id === id);
 		if (index !== -1) {
 			this._items.splice(index, 1);
-			this.emitChanges(Event.ORDER_CHANGE, { items: this._items });
 		}
 	}
 
@@ -142,4 +140,5 @@ export class OrdersData extends Model implements IOrdersData {
 		this._address = null;
 		this.emitChanges(Event.ORDER_RESET);
 	}
+
 }

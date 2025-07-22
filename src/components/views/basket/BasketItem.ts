@@ -1,10 +1,7 @@
 import { IProductShort } from '../../../types';
 import { Component } from '../../base/Component';
 import { EventEmitter } from '../../base/events';
-import { ensureElement } from '../../../utils/utils';
 import { Event } from '../../../index';
-import { data } from 'autoprefixer';
-
 
 export class BasketItem extends Component<IProductShort> {
 	protected _index: HTMLElement;
@@ -21,15 +18,12 @@ export class BasketItem extends Component<IProductShort> {
 		this._price = this.getFromContainer<HTMLElement>('.card__price');
 		this._button = this.getFromContainer<HTMLButtonElement>('.basket__item-delete');
 
-
 		this._button.addEventListener('click', () => {
 			const id = this.container.dataset.id;
 			if (id) {
 				this.events.emit(Event.BASKET_REMOVE, { id });
-
 			}
 		});
-
 	}
 
 	set id(value: string) {
@@ -53,8 +47,8 @@ export class BasketItem extends Component<IProductShort> {
 		return this._productPrice || 0;
 	}
 
-	render(data?: Partial<IProductShort>): HTMLElement {
-
-		return super.render(data);
+	set index(value: number) {
+		this.setText(this._index, value.toString());
 	}
+
 }

@@ -25,10 +25,13 @@ export class ProductPreview extends Component<IProductModal>{
 
 
 		this._button.addEventListener('click', () => {
-			this.events.emit(Event.PRODUCT_PREVIEW_BUTTON_CLICK)
+			if(this.isOrdered) {
+				this.events.emit(Event.ORDER_REMOVE_PRODUCT, { id: this.id });
+			} else {
+				this.events.emit(Event.ORDER_ADD_PRODUCT, { id: this.id });
+			}
+			this.isOrdered = !this.isOrdered
 		});
-
-
 	}
 
 	set title(value: string) {
@@ -52,5 +55,18 @@ export class ProductPreview extends Component<IProductModal>{
 		this.setText(this._description, value);
 	}
 
+	set id(value: string) {
+		this.container.dataset.id = value;
+	}
 
+	get id(): string {
+		return this.container.dataset.id || '';
+	}
+
+	set isOrdered(value: boolean) {
+		this._button.textContent = value ? 'Удалить из корзины' : 'В корзину';}
+
+	get isOrdered(): boolean {
+		return this._button.textContent === 'Удалить из корзины';
+	}
 }

@@ -27,7 +27,7 @@ export class Basket extends Component<IBasketView> {
 		this._emptyMessage.className = `${blockName}__empty`;
 
 		this._button.addEventListener('click', () => {
-			this.events.emit(Event.BASKET_TO_CLICK, {});
+			this.events.emit(Event.MODAL_TO_PAYMENT);
 		});
 	}
 

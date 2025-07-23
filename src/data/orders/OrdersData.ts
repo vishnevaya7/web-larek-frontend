@@ -1,11 +1,11 @@
 import { Model } from '../../components/base/Model';
-import { IOrdersData, IProduct, IOrder, IFormErrors } from '../../types';
+import { IOrdersData, IProduct, IOrder, IFormErrors, PaymentMethod } from '../../types';
 import { EventEmitter } from '../../components/base/events';
 import { Event } from '../../index';
 
 export class OrdersData extends Model implements IOrdersData {
 	protected _items: IProduct[] = [];
-	protected _payment: string | null = null;
+	protected _payment: PaymentMethod | null = null;
 	protected _email: string | null = null;
 	protected _phone: string | null = null;
 	protected _address: string | null = null;
@@ -38,6 +38,7 @@ export class OrdersData extends Model implements IOrdersData {
 		if (!this.isInOrder(product.id)) {
 			this._items.push(product);
 		}
+		this.emitChanges(Event.COUNTER_CHANGED, {count: this._items.length});
 	}
 
 	removeItemFromOrder(id: string): void {
@@ -45,6 +46,7 @@ export class OrdersData extends Model implements IOrdersData {
 		if (index !== -1) {
 			this._items.splice(index, 1);
 		}
+		this.emitChanges(Event.COUNTER_CHANGED, {count: this._items.length});
 	}
 
 
@@ -62,7 +64,7 @@ export class OrdersData extends Model implements IOrdersData {
 		}, 0);
 	}
 
-	setPaymentData(payment: string, address: string): void {
+	setPaymentData(payment: PaymentMethod, address: string): void {
 		this._payment = payment;
 		this._address = address;
 		this.emitChanges(Event.ORDER_PAYMENT_CHANGED, {
@@ -106,7 +108,7 @@ export class OrdersData extends Model implements IOrdersData {
 
 		if (!this._phone) {
 			errors.phone = 'Необходимо указать телефон';
-		} else if (!/^\+?[1-9]\d{1,14}$/.test(this._phone.replace(/\s/g, ''))) {
+		} else if (!/^\+7\d{10}$/.test(this._phone.replace(/\s/g, ''))) {
 			errors.phone = 'Некорректный формат телефона';
 		}
 

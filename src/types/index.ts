@@ -8,12 +8,17 @@ export interface IProduct {
 }
 
 export interface IOrder {
-	payment: string
+	payment: PaymentMethod
 	email: string
 	phone: string
 	address: string
 	total: number
 	items: IProduct[]
+}
+
+export enum PaymentMethod {
+	Online = 'online',
+	Receive = 'receive'
 }
 
 export interface IOrderPostResponse {
@@ -26,22 +31,18 @@ export type IProductCard = Omit<IProduct, 'description' | 'id'>;
 export type IProductModal = IProduct & {isOrdered: boolean};
 export type IProductShort = Pick<IProduct, 'id' | 'title' | 'price'> & { index?: number };
 export type IOrderModal = Pick<IOrder, 'total'> & { items: IProductShort[] }
-export type IPaymentModal = Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>;
-export type IFormErrors = Partial<Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>>;
+export type IPaymentModal = Pick<IOrder, 'payment' |  'address'>;
+export type IContactModal = Pick<IOrder, 'email' | 'phone'>;
+// export type IPaymentModal = Pick<IOrder, 'payment' | 'email' | 'phone' | 'address'>;
+export type IFormErrors = Partial<Pick<Record<keyof IOrder, string>, 'payment' | 'email' | 'phone' | 'address'>>;
+
+
 
 
 export interface IProductsData {
 	getAll(): Promise<IProduct[]>;
 	getById(id: string): Promise<IProduct>;
 	setPreview(id: string | null): void;
-}
-
-export enum ModalStage {
-	Closed = 'closed',
-	Orders = 'orders',
-	Payment = 'payment',
-	Contact = 'contact',
-	Finish = 'finish'
 }
 
 

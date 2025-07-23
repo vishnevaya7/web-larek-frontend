@@ -55,7 +55,12 @@ export class Product extends Component<IProductCard>{
 	}
 
 	set price(value: string) {
-		this.setText(this._price, value || 'Бесценно');
+		if(!value) {
+			this.setText(this._price, 'Бесценно');
+		} else {
+			this.setText(this._price, `${value} синапсов`);
+		}
+
 	}
 
 	get price(): string {

@@ -391,8 +391,8 @@ export enum AppEvent {
   CONTACTS_CHANGE = 'contacts:change',
 
   // События модального окна
-  MODAL_OPEN = 'modal:open',
-  MODAL_CLOSE = 'modal:close'
+  MODAL_OPENED = 'modal:open',
+  MODAL_CLOSED = 'modal:close'
 }
 ```
 

@@ -27,8 +27,9 @@ export class ContactForm extends Component<IContactModal> {
 			this.sendValidity();
 		});
 
-		this._submit.addEventListener('click', () => {
-			this.events.emit(Event.MODAL_TO_FINISH);
+		this._submit.addEventListener('click', (evt) => {
+			evt.preventDefault();
+			this.events.emit(Event.CREATE_ORDER);
 		});
 
 	}
@@ -54,13 +55,13 @@ export class ContactForm extends Component<IContactModal> {
 	sendValidity() {
 		this.events.emit(Event.CONTACT_VALIDITY, {
 			email: this.email,
-			phone: this.phone
+			phone: this.phone,
 		});
 	}
 
 	clearForm() {
 		this._email.value = '';
-		this._phone.value= '';
+		this._phone.value = '';
 		this.setDisabled(this._submit, true);
 	}
 }

@@ -12,7 +12,7 @@ export class FinishForm extends Component<any> {
 		this._totalPrice = this.getFromContainer<HTMLElement>('.order-success__description');
 		this._button = this.getFromContainer<HTMLButtonElement>('.order-success__close');
 		this._button.addEventListener('click', () => {
-			this.events.emit(Event.ORDER_FINISHED);
+			this.events.emit(Event.MODAL_CLOSE);
 		});
 
 	}

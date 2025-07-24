@@ -24,8 +24,9 @@ export enum PaymentMethod {
 export interface IOrderPostResponse {
 	id: string;
 	total: number;
-	items: IProduct[];
 }
+
+export type IOrderPostRequest  = Omit<IOrder, 'items'> & { items: string[] };
 
 export type IProductCard = Omit<IProduct, 'description' | 'id'>;
 export type IProductModal = IProduct & { isOrdered: boolean };
@@ -72,7 +73,6 @@ export interface IOrdersData {
 
 	validateContact(): void;
 
-	createOrder(): IOrder;
 
 	resetOrder(): void;
 }

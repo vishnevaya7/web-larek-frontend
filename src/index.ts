@@ -5,7 +5,7 @@ import { ProductsData } from './data/products/ProductsData';
 import { EventEmitter } from './components/base/events';
 import { Page } from './components/common/Page';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { IContactModal, IFormErrors, IPaymentModal, IProduct } from './types';
+import { IContactModal, IFormErrors, IOrderPostResponse, IPaymentModal, IProduct } from './types';
 import { Product } from './components/views/product/Product';
 import { OrdersData } from './data/orders/OrdersData';
 import { Modal } from './components/common/Modal';
@@ -14,9 +14,8 @@ import { Basket } from './components/views/basket/Basket';
 import { BasketItem } from './components/views/basket/BasketItem';
 import { PaymentForm } from './components/views/forms/PaymentForm';
 import { ContactForm } from './components/views/forms/ContactForm';
-import { Component } from './components/base/Component';
 import { FinishForm } from './components/views/modal/FinishForm';
-import { data } from 'autoprefixer';
+
 
 
 export enum Event {
@@ -38,8 +37,8 @@ export enum Event {
 	PAYMENT_VALIDITY = 'payment:validity',
 
 
-	MODAL_OPEN = 'modal:open',
-	MODAL_CLOSE = 'modal:close',
+	MODAL_OPENED = 'modal:opened',
+	MODAL_CLOSED = 'modal:closed',
 
 	PAYMENT_VALIDITY_RESULT = 'payment:validity-result',
 	CONTACT_VALIDITY = 'contact:validity',
@@ -50,6 +49,8 @@ export enum Event {
 	MODAL_TO_FINISH = 'modal:to-finish',
 
 	ORDER_PRODUCT_CHANGE = 'order:product-change',
+	CREATE_ORDER = 'order:create',
+	MODAL_CLOSE ='modal:close',
 
 
 }
@@ -143,11 +144,11 @@ eventEmitter.on(Event.BASKET_REMOVE, (el: { id: string }) => {
 });
 
 
-eventEmitter.on(Event.MODAL_OPEN, () => {
+eventEmitter.on(Event.MODAL_OPENED, () => {
 	page.locked = true;
 });
 
-eventEmitter.on(Event.MODAL_CLOSE, () => {
+eventEmitter.on(Event.MODAL_CLOSED, () => {
 	page.locked = false;
 });
 
@@ -158,8 +159,8 @@ eventEmitter.on(Event.MODAL_TO_PAYMENT, () => {
 eventEmitter.on(Event.MODAL_TO_CONTACT, () => {
 	modal.content = orderContact.render();
 });
-eventEmitter.on(Event.MODAL_TO_FINISH, () => {
-	modal.content = orderFinish.render({ totalPrice: orderModel.getTotal() });
+eventEmitter.on(Event.MODAL_TO_FINISH, (data: IOrderPostResponse) => {
+	modal.content = orderFinish.render({ totalPrice: data.total, id: data.id });
 });
 
 eventEmitter.on(Event.PAYMENT_VALIDITY, (data: IPaymentModal) => {
@@ -187,12 +188,12 @@ eventEmitter.on(Event.PAYMENT_VALIDITY_RESULT, (errors: IFormErrors) => {
 		} else {
 			orderPayment.clearErrors();
 		}
-	}
+	},
 );
 
 
 eventEmitter.on(Event.ORDER_FINISHED, () => {
-	modal.close();
+	// modal.close();
 	orderModel.resetOrder();
 });
 
@@ -221,6 +222,34 @@ eventEmitter.on(Event.ORDER_PRODUCT_CHANGE, (data: { id: string }) => {
 	preview.isOrdered = !isOrdered;
 
 });
+
+eventEmitter.on(Event.CREATE_ORDER, () => {
+	api.createOrder({
+		payment: orderModel.payment, // PaymentMethod enum используется напрямую
+		email: orderModel.email,
+		phone: orderModel.phone,
+		address: orderModel.address,
+		total: orderModel.getTotal(),
+		items: orderModel.items.map(item => item.id),
+	})
+		.then(result => {
+			console.log('Заказ создан:', result);
+			eventEmitter.emit(Event.MODAL_TO_FINISH, result);
+		})
+		.catch(error => {
+			console.error('Ошибка создания заказа:', error);
+			modal.close();
+		})
+		.finally( () => {
+			eventEmitter.emit(Event.ORDER_FINISHED);
+
+		});
+});
+
+
+eventEmitter.on(Event.MODAL_CLOSE, () => {
+	modal.close();
+})
 
 
 if (process.env.NODE_ENV === 'development') {

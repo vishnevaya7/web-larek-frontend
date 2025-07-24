@@ -1,5 +1,5 @@
 import { Model } from '../../components/base/Model';
-import { IOrdersData, IProduct, IOrder, IFormErrors, PaymentMethod } from '../../types';
+import { IOrdersData, IProduct, IFormErrors, PaymentMethod } from '../../types';
 import { EventEmitter } from '../../components/base/events';
 import { Event } from '../../index';
 
@@ -18,7 +18,7 @@ export class OrdersData extends Model implements IOrdersData {
 		return this._items;
 	}
 
-	get payment(): string | null {
+	get payment(): PaymentMethod | null {
 		return this._payment;
 	}
 
@@ -116,24 +116,24 @@ export class OrdersData extends Model implements IOrdersData {
 		this.emitChanges(Event.CONTACT_VALIDITY_RESULT, errors);
 	}
 
-	createOrder(): IOrder {
-		if (!this._payment || !this._email || !this._phone || !this._address) {
-			throw new Error('Не все данные заказа заполнены');
-		}
-
-		if (this._items.length === 0) {
-			throw new Error('Корзина пуста');
-		}
-
-		return {
-			payment: this._payment,
-			email: this._email,
-			phone: this._phone,
-			address: this._address,
-			total: this.getTotal(),
-			items: [...this._items],
-		};
-	}
+	// createOrder(): IOrder {
+	// 	if (!this._payment || !this._email || !this._phone || !this._address) {
+	// 		throw new Error('Не все данные заказа заполнены');
+	// 	}
+	//
+	// 	if (this._items.length === 0) {
+	// 		throw new Error('Корзина пуста');
+	// 	}
+	//
+	// 	return {
+	// 		payment: this._payment,
+	// 		email: this._email,
+	// 		phone: this._phone,
+	// 		address: this._address,
+	// 		total: this.getTotal(),
+	// 		items: [...this._items],
+	// 	};
+	// }
 
 	resetOrder(): void {
 		this._items = [];

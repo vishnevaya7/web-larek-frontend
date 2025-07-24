@@ -1,12 +1,12 @@
 import { Api, ApiListResponse } from '../base/api';
-import { IOrder, IOrderPostResponse, IProduct } from '../../types';
+import { IOrder, IOrderPostRequest, IOrderPostResponse, IProduct } from '../../types';
 
 export interface IApiApi {
 	getProducts(): Promise<IProduct[]>;
 
 	getProductById(id: string): Promise<IProduct>;
 
-	createOrder(order: IOrder): Promise<IOrderPostResponse>;
+	createOrder(order: IOrderPostRequest): Promise<IOrderPostResponse>;
 }
 
 export class AppApi extends Api implements IApiApi {
@@ -38,7 +38,7 @@ export class AppApi extends Api implements IApiApi {
 		return this.get(`/product/${id}`) as Promise<IProduct>;
 	}
 
-	createOrder(order: IOrder): Promise<IOrderPostResponse> {
+	createOrder(order: IOrderPostRequest): Promise<IOrderPostResponse> {
 		return this.post('/order', order) as Promise<IOrderPostResponse>;
 	}
 }

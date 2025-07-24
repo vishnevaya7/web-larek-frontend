@@ -38,7 +38,7 @@ export class OrdersData extends Model implements IOrdersData {
 		if (!this.isInOrder(product.id)) {
 			this._items.push(product);
 		}
-		this.emitChanges(Event.COUNTER_CHANGED, {count: this._items.length});
+		this.emitChanges(Event.COUNTER_CHANGED, { count: this._items.length });
 	}
 
 	removeItemFromOrder(id: string): void {
@@ -46,7 +46,7 @@ export class OrdersData extends Model implements IOrdersData {
 		if (index !== -1) {
 			this._items.splice(index, 1);
 		}
-		this.emitChanges(Event.COUNTER_CHANGED, {count: this._items.length});
+		this.emitChanges(Event.COUNTER_CHANGED, { count: this._items.length });
 	}
 
 
@@ -69,7 +69,7 @@ export class OrdersData extends Model implements IOrdersData {
 		this._address = address;
 		this.emitChanges(Event.ORDER_PAYMENT_CHANGED, {
 			payment: this._payment,
-			address: this._address
+			address: this._address,
 		});
 	}
 
@@ -78,12 +78,12 @@ export class OrdersData extends Model implements IOrdersData {
 		this._phone = phone;
 		this.emitChanges(Event.ORDER_CONTACT_CHANGED, {
 			email: this._email,
-			phone: this._phone
+			phone: this._phone,
 		});
 	}
 
 
-	validatePayment(): IFormErrors | null {
+	validatePayment() {
 		const errors: IFormErrors = {};
 
 		if (!this._payment) {
@@ -94,10 +94,11 @@ export class OrdersData extends Model implements IOrdersData {
 			errors.address = 'Необходимо указать адрес доставки';
 		}
 
-		return Object.keys(errors).length > 0 ? errors : null;
+		this.emitChanges(Event.PAYMENT_VALIDITY_RESULT, errors);
+
 	}
 
-	validateContact(): IFormErrors | null {
+	validateContact() {
 		const errors: IFormErrors = {};
 
 		if (!this._email) {
@@ -112,7 +113,7 @@ export class OrdersData extends Model implements IOrdersData {
 			errors.phone = 'Некорректный формат телефона';
 		}
 
-		return Object.keys(errors).length > 0 ? errors : null;
+		this.emitChanges(Event.CONTACT_VALIDITY_RESULT, errors);
 	}
 
 	createOrder(): IOrder {
@@ -130,7 +131,7 @@ export class OrdersData extends Model implements IOrdersData {
 			phone: this._phone,
 			address: this._address,
 			total: this.getTotal(),
-			items: [...this._items]
+			items: [...this._items],
 		};
 	}
 

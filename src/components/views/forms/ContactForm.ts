@@ -27,24 +27,20 @@ export class ContactForm extends Component<IContactModal> {
 			this.sendValidity();
 		});
 
-		this.events.on(Event.CONTACT_VALIDITY_RESULT, (errors: IFormErrors) => {
-				if(errors) {
-					this.setDisabled(this._submit, true);
-					this._formErrors.innerHTML = errors.email || errors.phone;
-				} else {
-					this.setDisabled(this._submit, false);
-					this._formErrors.innerHTML = '';
-				}
-			},
-		);
-
 		this._submit.addEventListener('click', () => {
 			this.events.emit(Event.MODAL_TO_FINISH);
 		});
 
-		this.events.on(Event.ORDER_FINISHED, () => {
-			this.clearForm ();
-		});
+	}
+
+	clearErrors() {
+		this.setDisabled(this._submit, false);
+		this._formErrors.innerHTML = '';
+	}
+
+	showError(errors: IFormErrors) {
+		this.setDisabled(this._submit, true);
+		this._formErrors.innerHTML = errors.email || errors.phone;
 	}
 
 	get email(): string {
@@ -62,7 +58,7 @@ export class ContactForm extends Component<IContactModal> {
 		});
 	}
 
-	private clearForm() {
+	clearForm() {
 		this._email.value = '';
 		this._phone.value= '';
 		this.setDisabled(this._submit, true);

@@ -5,7 +5,7 @@ import { ProductsData } from './data/products/ProductsData';
 import { EventEmitter } from './components/base/events';
 import { Page } from './components/common/Page';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { IContactModal, IPaymentModal, IProduct } from './types';
+import { IContactModal, IFormErrors, IPaymentModal, IProduct } from './types';
 import { Product } from './components/views/product/Product';
 import { OrdersData } from './data/orders/OrdersData';
 import { Modal } from './components/common/Modal';
@@ -27,7 +27,7 @@ export enum Event {
 	PRODUCT_GET_BY_ID = 'product:get-by-id',
 	PRODUCTS_GET = 'products:get',
 	PREVIEW_SET = 'preview:set',
-	ORDER_ADD_PRODUCT = 'order:add-product',
+
 
 	ORDER_OPEN = 'order:open',
 	ORDER_RESET = 'order:reset',
@@ -40,7 +40,7 @@ export enum Event {
 
 	MODAL_OPEN = 'modal:open',
 	MODAL_CLOSE = 'modal:close',
-	ORDER_REMOVE_PRODUCT = 'order:remove-product',
+
 	PAYMENT_VALIDITY_RESULT = 'payment:validity-result',
 	CONTACT_VALIDITY = 'contact:validity',
 	CONTACT_VALIDITY_RESULT = 'contact:validity-result',
@@ -48,6 +48,8 @@ export enum Event {
 	MODAL_TO_PAYMENT = 'modal:to-payment',
 	MODAL_TO_CONTACT = 'modal:to-contact',
 	MODAL_TO_FINISH = 'modal:to-finish',
+
+	ORDER_PRODUCT_CHANGE = 'order:product-change',
 
 
 }
@@ -75,6 +77,7 @@ const orderFinishTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 const page = new Page(document.body, eventEmitter);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), eventEmitter);
+const preview = new ProductPreview('card', cloneTemplate(cardPreviewTemplate), eventEmitter);
 const basket = new Basket('basket', cloneTemplate(basketTemplate), eventEmitter);
 const orderPayment = new PaymentForm(cloneTemplate(orderTemplate), eventEmitter);
 const orderContact = new ContactForm(cloneTemplate(contactTemplate), eventEmitter);
@@ -103,7 +106,6 @@ eventEmitter.on(Event.PRODUCT_TO_CLICK, (el: { id: string }) => {
 });
 
 eventEmitter.on(Event.PREVIEW_SET, (product: IProduct) => {
-	const preview = new ProductPreview('card', cloneTemplate(cardPreviewTemplate), eventEmitter);
 	modal.content = preview.render({ ...product, isOrdered: orderModel.isInOrder(product.id) });
 	modal.open();
 });
@@ -140,19 +142,6 @@ eventEmitter.on(Event.BASKET_REMOVE, (el: { id: string }) => {
 	);
 });
 
-eventEmitter.on(Event.ORDER_ADD_PRODUCT, (el: { id: string }) => {
-	productModel.getById(el.id).then(product => {
-			orderModel.addItemToOrder(product);
-		},
-	);
-});
-
-eventEmitter.on(Event.ORDER_REMOVE_PRODUCT, (el: { id: string }) => {
-	productModel.getById(el.id).then(product => {
-			orderModel.removeItemFromOrder(product.id);
-		},
-	);
-});
 
 eventEmitter.on(Event.MODAL_OPEN, () => {
 	page.locked = true;
@@ -170,27 +159,68 @@ eventEmitter.on(Event.MODAL_TO_CONTACT, () => {
 	modal.content = orderContact.render();
 });
 eventEmitter.on(Event.MODAL_TO_FINISH, () => {
-	modal.content = orderFinish.render({totalPrice: orderModel.getTotal()});
+	modal.content = orderFinish.render({ totalPrice: orderModel.getTotal() });
 });
 
 eventEmitter.on(Event.PAYMENT_VALIDITY, (data: IPaymentModal) => {
 	orderModel.setPaymentData(data.payment, data.address);
-	const errors = orderModel.validatePayment();
-	eventEmitter.emit(Event.PAYMENT_VALIDITY_RESULT, errors);
+	orderModel.validatePayment();
 });
 
 eventEmitter.on(Event.CONTACT_VALIDITY, (data: IContactModal) => {
 	orderModel.setContactData(data.email, data.phone);
-	const errors = orderModel.validateContact();
-	eventEmitter.emit(Event.CONTACT_VALIDITY_RESULT, errors);
+	orderModel.validateContact();
+});
+
+
+eventEmitter.on(Event.CONTACT_VALIDITY_RESULT, (errors: IFormErrors) => {
+	if (Object.keys(errors).length > 0) {
+		orderContact.showError(errors);
+	} else {
+		orderContact.clearErrors();
+	}
+});
+
+eventEmitter.on(Event.PAYMENT_VALIDITY_RESULT, (errors: IFormErrors) => {
+		if (Object.keys(errors).length > 0) {
+			orderPayment.showError(errors);
+		} else {
+			orderPayment.clearErrors();
+		}
+	}
+);
+
+
+eventEmitter.on(Event.ORDER_FINISHED, () => {
+	modal.close();
+	orderModel.resetOrder();
 });
 
 eventEmitter.on(Event.ORDER_FINISHED, () => {
-// close modal and clear order
-	modal.close();
-	orderModel.resetOrder()
-	// orderModel.clearOrder();
-})
+	page.counter = 0;
+});
+
+eventEmitter.on(Event.ORDER_FINISHED, () => {
+	orderPayment.clearForm();
+});
+
+eventEmitter.on(Event.ORDER_FINISHED, () => {
+	orderContact.clearForm();
+});
+
+eventEmitter.on(Event.ORDER_PRODUCT_CHANGE, (data: { id: string }) => {
+	const isOrdered = orderModel.isInOrder(data.id);
+	if (isOrdered) {
+		orderModel.removeItemFromOrder(data.id);
+	} else {
+		productModel.getById(data.id).then(
+			result =>
+				orderModel.addItemToOrder(result),
+		);
+	}
+	preview.isOrdered = !isOrdered;
+
+});
 
 
 if (process.env.NODE_ENV === 'development') {

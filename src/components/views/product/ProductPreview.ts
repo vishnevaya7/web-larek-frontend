@@ -1,6 +1,6 @@
 import { Component } from '../../base/Component';
 import { IProductModal } from '../../../types';
-import { ensureElement, getCategoryKind } from '../../../utils/utils';
+import { getCategoryKind } from '../../../utils/utils';
 import { Event } from '../../../index';
 import { IEvents } from '../../base/events';
 
@@ -25,13 +25,9 @@ export class ProductPreview extends Component<IProductModal>{
 
 
 		this._button.addEventListener('click', () => {
-			if(this.isOrdered) {
-				this.events.emit(Event.ORDER_REMOVE_PRODUCT, { id: this.id });
-			} else {
-				this.events.emit(Event.ORDER_ADD_PRODUCT, { id: this.id });
-			}
-			this.isOrdered = !this.isOrdered
+			this.events.emit(Event.ORDER_PRODUCT_CHANGE, { id: this.id });
 		});
+
 	}
 
 	set title(value: string) {
@@ -64,9 +60,7 @@ export class ProductPreview extends Component<IProductModal>{
 	}
 
 	set isOrdered(value: boolean) {
-		this._button.textContent = value ? 'Удалить из корзины' : 'В корзину';}
-
-	get isOrdered(): boolean {
-		return this._button.textContent === 'Удалить из корзины';
+		this._button.textContent = value ? 'Удалить из корзины' : 'В корзину';
 	}
+
 }

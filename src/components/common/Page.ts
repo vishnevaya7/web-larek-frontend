@@ -28,10 +28,6 @@ export class Page extends Component<IPage> {
 			this.events.emit(Event.ORDER_OPEN);
 		});
 
-		this.events.on(Event.ORDER_FINISHED, () => {
-			this.counter = 0;
-		});
-
 	}
 
 	set counter(value: number) {

@@ -54,17 +54,13 @@ export class Product extends Component<IProductCard>{
 		this._category.classList.add(`${this.blockName}__category_${getCategoryKind(value)}`)
 	}
 
-	set price(value: string) {
+	set price(value: number | null) {
 		if(!value) {
 			this.setText(this._price, 'Бесценно');
 		} else {
 			this.setText(this._price, `${value} синапсов`);
 		}
 
-	}
-
-	get price(): string {
-		return this._price.textContent || '';
 	}
 
 }

@@ -39,17 +39,6 @@ export class PaymentForm extends Component<IPaymentModal> {
 				});
 			});
 
-		this.events.on(Event.PAYMENT_VALIDITY_RESULT, (errors: IFormErrors) => {
-				if (errors) {
-					this.setDisabled(this._submit, true);
-					this._formErrors.innerHTML = errors.address || errors.payment;
-				} else {
-					this.setDisabled(this._submit, false);
-					this._formErrors.innerHTML = '';
-				}
-			},
-		);
-
 		this._address.addEventListener('input', () => {
 			this.sendValidity();
 		});
@@ -58,9 +47,16 @@ export class PaymentForm extends Component<IPaymentModal> {
 			events.emit(Event.MODAL_TO_CONTACT);
 		});
 
-		this.events.on(Event.ORDER_FINISHED, () => {
-			this.clearForm();
-		});
+	}
+
+	clearErrors() {
+		this.setDisabled(this._submit, false);
+		this._formErrors.innerHTML = '';
+	}
+
+	showError(errors: IFormErrors) {
+		this.setDisabled(this._submit, true);
+		this._formErrors.innerHTML = errors.address || errors.payment;
 	}
 
 	clearForm() {
